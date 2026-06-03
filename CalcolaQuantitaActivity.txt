@@ -1,0 +1,47 @@
+package com.vincenzo.borsaapp
+
+import android.os.Bundle
+import android.widget.Button
+import android.widget.EditText
+import android.widget.TextView
+import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
+
+class CalcolaQuantitaActivity : AppCompatActivity() {
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_calcola_quantita)
+
+        // Trova gli elementi della UI
+        val edtImporto = findViewById<EditText>(R.id.edtImporto)
+        val edtPrezzoAzione = findViewById<EditText>(R.id.edtPrezzoAzione)
+        val btnCalcolaQuantita = findViewById<Button>(R.id.btnCalcolaQuantita)
+        val txtQuantitaRisultato = findViewById<TextView>(R.id.txtQuantitaRisultato)
+
+        btnCalcolaQuantita.setOnClickListener {
+            val importoStr = edtImporto.text.toString().trim()
+            val prezzoStr = edtPrezzoAzione.text.toString().trim()
+
+            if (importoStr.isNotEmpty() && prezzoStr.isNotEmpty()) {
+                val importo = importoStr.toDoubleOrNull()
+                val prezzo = prezzoStr.toDoubleOrNull()
+
+                if (importo != null && prezzo != null) {
+                    if (prezzo > 0) {
+                        val quantita = (importo / prezzo).toInt()
+                        txtQuantitaRisultato.text = "Numero di azioni: $quantita"
+                    } else {
+                        edtPrezzoAzione.error = "Il prezzo deve essere maggiore di 0"
+                    }
+                } else {
+                    Toast.makeText(this, "Inserisci numeri validi", Toast.LENGTH_SHORT).show()
+                }
+            } else {
+                edtImporto.error = "Campo obbligatorio"
+                edtPrezzoAzione.error = "Campo obbligatorio"
+            }
+        }
+    }
+}
+

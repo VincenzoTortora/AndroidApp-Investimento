@@ -1,0 +1,85 @@
+package com.vincenzo.borsaapp
+
+import android.content.ContentValues
+import android.content.Context
+import android.database.sqlite.SQLiteDatabase
+import android.database.sqlite.SQLiteOpenHelper
+
+class DatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE_NAME, null, DATABASE_VERSION) {
+
+    companion object {
+        private const val DATABASE_NAME = "borsaApp.db"
+        private const val DATABASE_VERSION = 1
+        private const val TABLE_NAME = "Capitale"
+        private const val COLUMN_ID = "id"
+        private const val COLUMN_CAPITALE = "capitale"
+    }
+
+    override fun onCreate(db: SQLiteDatabase?) {
+        val createTableQuery = """
+            CREATE TABLE $TABLE_NAME (
+                $COLUMN_ID INTEGER PRIMARY KEY AUTOINCREMENT, 
+                $COLUMN_CAPITALE REAL NOT NULL
+            )
+        """.trimIndent()
+        db?.execSQL(createTableQuery)
+    }
+
+    override fun onUpgrade(db: SQLiteDatabase?, oldVersion: Int, newVersion: Int) {
+        db?.execSQL("DROP TABLE IF EXISTS $TABLE_NAME")
+        onCreate(db)
+    }
+
+    // Metodo ottimizzato per verificare se il capitale esiste
+    fun capitaleEsiste(): Boolean {
+        val db = this.readableDatabase
+        val query = "SELECT EXISTS(SELECT 1 FROM $TABLE_NAME LIMIT 1)"
+        val cursor = db.rawQuery(query, null)
+        val exists = cursor.use { it.moveToFirst() && it.getInt(0) == 1 }
+        db.close()
+        return exists
+    }
+
+    fun inserisciCapitaleIniziale(capitale: Double) {
+        val db = this.writableDatabase
+        db.execSQL("DELETE FROM $TABLE_NAME") // Assicura un solo valore nella tabella
+        val contentValues = ContentValues().apply {
+            put(COLUMN_CAPITALE, capitale)
+        }
+        db.insert(TABLE_NAME, null, contentValues)
+        db.close()
+    }
+
+    // Metodo per leggere l'ultimo capitale salvato
+    fun readCapitaleIniziale(): Double {
+        val db = this.readableDatabase
+        val query = "SELECT $COLUMN_CAPITALE FROM $TABLE_NAME ORDER BY $COLUMN_ID DESC LIMIT 1"
+        val cursor = db.rawQuery(query, null)
+        val capitale = cursor.use {
+            if (it.moveToFirst()) it.getDouble(0) else 0.0
+        }
+        db.close()
+        return capitale
+    }
+
+    // Metodo per aggiornare il capitale esistente
+    fun updateCapitaleIniziale(capitale: Double) {
+        val db = this.writableDatabase
+        val contentValues = ContentValues().apply {
+            put(COLUMN_CAPITALE, capitale)
+        }
+        val rowsAffected = db.update(TABLE_NAME, contentValues, null, null)
+
+        if (rowsAffected == 0) {
+            inserisciCapitaleIniziale(capitale) // Se non esiste, lo inserisce
+        }
+        db.close()
+    }
+
+    // Nuovo metodo per aggiornare il capitale sommando un valore
+    fun aggiornaCapitale(valore: Double) {
+        val nuovoCapitale = readCapitaleIniziale() + valore
+        updateCapitaleIniziale(nuovoCapitale)
+    }
+}
+

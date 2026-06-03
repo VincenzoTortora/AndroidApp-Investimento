@@ -1,0 +1,194 @@
+package com.vincenzo.borsaapp
+
+import android.os.Bundle
+import android.text.InputType
+import android.widget.*
+import androidx.appcompat.app.AlertDialog
+import androidx.appcompat.app.AppCompatActivity
+import android.content.Intent
+
+class MainActivity : AppCompatActivity() {
+
+    private lateinit var edtAcquisto: EditText
+    private lateinit var edtVendita: EditText
+    private lateinit var edtTobinTax: EditText
+    private lateinit var edtQuantita: EditText
+    private lateinit var edtNumeroAcquisti: EditText // Nuovo campo per il numero di acquisti
+    private lateinit var edtNumeroVendite: EditText // Nuovo campo per il numero di vendite
+    private lateinit var txtRisultato: TextView
+    private lateinit var txtCapitale: TextView
+    private lateinit var btnCalcola: Button
+    private lateinit var btnReset: Button
+    private lateinit var btnCalcolaDividendi: Button // Bottone per calcolare dividendi
+    private lateinit var btnCalcolaQuantita: Button // Bottone per calcolare quantità
+    private lateinit var switchSommaGuadagno: Switch
+
+    private lateinit var dbHelper: DatabaseHelper
+    private var guadagnoNetto: Double = 0.0  // Variabile per tenere traccia del guadagno netto
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
+
+        // Inizializzazione UI
+        edtAcquisto = findViewById(R.id.edtAcquisto)
+        edtVendita = findViewById(R.id.edtVendita)
+        edtTobinTax = findViewById(R.id.edtTobinTax)
+        edtQuantita = findViewById(R.id.edtQuantita)
+        edtNumeroAcquisti = findViewById(R.id.edtNumeroAcquisti) // Nuovo campo
+        edtNumeroVendite = findViewById(R.id.edtNumeroVendite) // Nuovo campo
+        txtRisultato = findViewById(R.id.txtRisultato)
+        txtCapitale = findViewById(R.id.txtCapitale)
+        btnCalcola = findViewById(R.id.btnCalcola)
+        btnReset = findViewById(R.id.btnReset)
+        btnCalcolaDividendi = findViewById(R.id.btnCalcolaDividendi)
+        btnCalcolaQuantita = findViewById(R.id.btnCalcolaQuantita) // Assicurati che l'ID sia corretto
+        switchSommaGuadagno = findViewById(R.id.switchSommaGuadagno)
+
+        dbHelper = DatabaseHelper(this)
+
+        if (!dbHelper.capitaleEsiste()) {
+            chiediCapitaleIniziale()
+        } else {
+            aggiornaCapitale()
+        }
+
+        btnCalcolaQuantita.setOnClickListener { // Modifica qui
+            val intent = Intent(this, CalcolaQuantitaActivity::class.java)
+            startActivity(intent)
+        }
+
+        btnCalcolaDividendi.setOnClickListener {
+            val intent = Intent(this, CalcolaDividendiActivity::class.java)
+            startActivityForResult(intent, REQUEST_CODE_DIVIDENDI)
+        }
+
+        // Calcolo del guadagno solo quando il bottone viene premuto, non automaticamente
+        btnCalcola.setOnClickListener {
+            calcolaGuadagno()
+        }
+
+        // Gestione del Switch
+        switchSommaGuadagno.setOnCheckedChangeListener { _, isChecked ->
+            if (isChecked) {
+                mostraConfermaSommaGuadagno()
+            } else {
+                aggiornaCapitale() // Mostra capitale corrente se il switch viene disattivato
+            }
+        }
+
+        btnReset.setOnClickListener {
+            resetCampi()
+        }
+    }
+
+    // Gestione della risposta dall'attività CalcolaDividendiActivity
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode == REQUEST_CODE_DIVIDENDI && resultCode == RESULT_OK) {
+            // Aggiorna il capitale quando si torna dalla CalcolaDividendiActivity
+            aggiornaCapitale()
+        }
+    }
+
+    private fun chiediCapitaleIniziale() {
+        val input = EditText(this)
+        input.inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+
+        AlertDialog.Builder(this)
+            .setTitle("Inserisci il capitale iniziale")
+            .setView(input)
+            .setPositiveButton("Salva") { _, _ ->
+                val capitale = input.text.toString().toDoubleOrNull() ?: 0.0
+                dbHelper.inserisciCapitaleIniziale(capitale)
+                aggiornaCapitale()
+                Toast.makeText(this, "Capitale iniziale salvato: €$capitale", Toast.LENGTH_LONG).show()
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun calcolaGuadagno() {
+        try {
+            // Estrai i valori dagli EditText
+            val prezzoAcquisto = edtAcquisto.text.toString().toDouble()
+            val prezzoVendita = edtVendita.text.toString().toDouble()
+            val tobinTax = edtTobinTax.text.toString().toDouble()
+            val quantita = edtQuantita.text.toString().toInt()
+
+            // Calcola il guadagno lordo
+            val guadagnoLordo = (prezzoVendita - prezzoAcquisto) * quantita
+
+            // Calcola la tassa del 26%
+            val tassa26 = guadagnoLordo * 0.26
+
+            // Estrai il numero di acquisti e vendite effettuati
+            val acquisti = edtNumeroAcquisti.text.toString().toIntOrNull() ?: 0
+            val vendite = edtNumeroVendite.text.toString().toIntOrNull() ?: 0
+
+            // Calcolo delle spese Directa
+            val speseDirecta = (acquisti + vendite) * 5.0
+
+            // Calcolo del guadagno netto
+            guadagnoNetto = guadagnoLordo - tassa26 - speseDirecta - tobinTax
+
+            // Mostra il risultato
+            txtRisultato.text = "\n--------------------\n" +
+                    "Guadagno: € ${"%.2f".format(guadagnoNetto)}\n" +
+                    "Guadagno Lordo: € ${"%.2f".format(guadagnoLordo)}\n" +
+                    "Tassa 26%: € ${"%.2f".format(tassa26)}\n" +
+                    "Spese Directa: € ${"%.2f".format(speseDirecta)}\n" +
+                    "Tobin Tax: € ${"%.2f".format(tobinTax)}\n" +
+                    "--------------------\n"
+
+            // Se il switch è attivato, mostra la conferma prima di sommare il guadagno
+            if (switchSommaGuadagno.isChecked) {
+                mostraConfermaSommaGuadagno()
+            }
+
+        } catch (e: NumberFormatException) {
+            txtRisultato.text = "Errore: Inserisci tutti i valori correttamente!"
+        }
+    }
+
+    private fun mostraConfermaSommaGuadagno() {
+        AlertDialog.Builder(this)
+            .setTitle("Conferma aggiunta guadagno al capitale")
+            .setMessage("Sei sicuro di voler sommare € ${"%.2f".format(guadagnoNetto)} al capitale?")
+            .setPositiveButton("Conferma") { _, _ ->
+                // Somma il guadagno al capitale solo dopo conferma
+                val capitaleIniziale = dbHelper.readCapitaleIniziale()
+                val nuovoCapitale = capitaleIniziale + guadagnoNetto
+                dbHelper.updateCapitaleIniziale(nuovoCapitale)
+                aggiornaCapitale() // Aggiorna subito il capitale
+                Toast.makeText(this, "Guadagno sommato al capitale", Toast.LENGTH_SHORT).show()
+                // Imposta lo switch su false dopo la conferma
+                switchSommaGuadagno.isChecked = false
+            }
+            .setNegativeButton("Annulla") { _, _ ->
+                // Imposta lo switch su false se l'utente annulla
+                switchSommaGuadagno.isChecked = false
+            }
+            .setCancelable(false)
+            .show()
+    }
+
+    private fun aggiornaCapitale() {
+        val capitaleAttuale = dbHelper.readCapitaleIniziale()
+        txtCapitale.text = "Capitale: € ${"%.2f".format(capitaleAttuale)}\n"
+    }
+
+    private fun resetCampi() {
+        edtAcquisto.text.clear()
+        edtVendita.text.clear()
+        edtTobinTax.text.clear()
+        edtQuantita.text.clear()
+        edtNumeroAcquisti.text.clear()
+        edtNumeroVendite.text.clear()
+        txtRisultato.text = ""
+    }
+
+    companion object {
+        private const val REQUEST_CODE_DIVIDENDI = 1 // Codice di richiesta per CalcolaDividendiActivity
+    }
+}

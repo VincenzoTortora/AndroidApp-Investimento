@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <ScrollView
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:fillViewport="true"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:padding="8dp">
+
+            <!-- TextView per il capitale -->
+            <TextView
+                android:id="@+id/txtCapitale"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Capitale: € 0.00"
+                android:textSize="32sp"
+                android:minHeight="48dp"
+                android:gravity="center"
+                android:textStyle="bold"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- Campi di input -->
+            <Button
+                android:id="@+id/btnCalcolaQuantita"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginBottom="16dp"
+                android:text="Calcola Quantità"
+                android:textSize="18sp" />
+
+            <Button
+                android:id="@+id/btnCalcolaDividendi"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Calcola Dividendi"
+                android:textSize="18sp"
+                android:layout_gravity="center"
+                android:layout_marginBottom="16dp"/>
+
+            <EditText
+                android:id="@+id/edtAcquisto"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Prezzo di Acquisto"
+                android:inputType="numberDecimal"
+                android:textSize="16sp"
+                android:minHeight="48dp"
+                android:layout_marginBottom="12dp"/>
+
+            <EditText
+                android:id="@+id/edtVendita"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Prezzo di Vendita"
+                android:inputType="numberDecimal"
+                android:textSize="16sp"
+                android:minHeight="48dp"
+                android:layout_marginBottom="12dp"/>
+
+            <EditText
+                android:id="@+id/edtTobinTax"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Tobin Tax"
+                android:inputType="numberDecimal"
+                android:textSize="16sp"
+                android:minHeight="48dp"
+                android:layout_marginBottom="12dp"/>
+
+            <EditText
+                android:id="@+id/edtQuantita"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Quantità"
+                android:inputType="number"
+                android:textSize="16sp"
+                android:minHeight="48dp"
+                android:layout_marginBottom="12dp"/>
+
+            <EditText
+                android:id="@+id/edtNumeroAcquisti"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Numero di acquisti"
+                android:inputType="number"
+                android:textSize="16sp"
+                android:minHeight="48dp"
+                android:layout_marginBottom="12dp"/>
+
+            <EditText
+                android:id="@+id/edtNumeroVendite"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Numero di vendite"
+                android:inputType="number"
+                android:textSize="16sp"
+                android:minHeight="48dp"
+                android:layout_marginBottom="12dp"/>
+
+            <!-- Switch per sommare il guadagno -->
+            <Switch
+                android:id="@+id/switchSommaGuadagno"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Somma al Capitale"
+                android:textSize="16sp"
+                android:minHeight="48dp"
+                android:layout_marginBottom="16dp"/>
+
+            <!-- Pulsanti -->
+            <Button
+                android:id="@+id/btnCalcola"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Calcola"
+                android:textSize="18sp"
+                android:minHeight="48dp"
+                android:layout_marginBottom="12dp"/>
+
+            <Button
+                android:id="@+id/btnReset"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Reset"
+                android:textSize="18sp"
+                android:minHeight="48dp"
+                android:layout_marginBottom="12dp"/>
+
+            <!-- TextView per mostrare il risultato -->
+            <TextView
+                android:id="@+id/txtRisultato"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text=""
+                android:textSize="16sp"
+                android:minHeight="48dp"
+                android:gravity="center"
+                android:layout_marginBottom="16dp"/>
+
+        </LinearLayout>
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
